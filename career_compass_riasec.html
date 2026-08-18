@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Compass — Find Your Type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --ink:#25242B;
+    --paper:#FFFFFF;
+    --line:#E7E0D3;
+    --r:#3E7C59; /* Realistic - forest green */
+    --i:#2E4F73; /* Investigative - deep blue */
+    --a:#B5446E; /* Artistic - magenta */
+    --s:#D98E27; /* Social - warm amber */
+    --e:#C1440E; /* Enterprising - burnt orange */
+    --c:#5C6B73; /* Conventional - slate */
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:720px;
+  }
+  h1,h2,h3{
+    font-family:'Fredoka',sans-serif;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .eyebrow{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--e);
+    margin-bottom:6px;
+  }
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px;
+    box-shadow:0 2px 0 var(--line);
+  }
+  p.lead{
+    font-size:16px;
+    line-height:1.6;
+    color:#4a4854;
+  }
+  .compass{
+    width:74px;height:74px;
+    margin-bottom:18px;
+  }
+  .btn{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    border-radius:100px;
+    padding:14px 28px;
+    cursor:pointer;
+    background:var(--ink);
+    color:#fff;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px); background:#000;}
+  .btn:active{transform:translateY(0);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1.5px solid var(--ink);
+  }
+  .btn.secondary:hover{background:var(--ink); color:#fff;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* Quiz */
+  .progress-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:22px;
+  }
+  .progress-track{
+    flex:1;
+    height:8px;
+    background:var(--line);
+    border-radius:100px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--e), var(--a));
+    border-radius:100px;
+    transition:width .25s ease;
+  }
+  .progress-label{
+    font-size:13px;
+    font-weight:600;
+    color:#7a7787;
+    white-space:nowrap;
+  }
+  .q-tag{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:100px;
+    margin-bottom:14px;
+    color:#fff;
+  }
+  .q-text{
+    font-size:22px;
+    font-weight:600;
+    font-family:'Fredoka',sans-serif;
+    line-height:1.35;
+    margin-bottom:28px;
+  }
+  .scale{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .scale button{
+    text-align:left;
+    padding:14px 18px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .scale button:hover{border-color:var(--ink); background:#FAF8F4;}
+  .scale button .dot{
+    width:18px;height:18px;
+    border-radius:50%;
+    border:2px solid #c9c4b6;
+    flex-shrink:0;
+  }
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:24px;
+  }
+
+  /* Results */
+  .results-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .type-code{
+    font-family:'Fredoka',sans-serif;
+    font-size:44px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  .type-code span{padding:0 2px;}
+  canvas#spider{
+    width:100%;
+    max-width:460px;
+    display:block;
+    margin:18px auto;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 16px;
+    justify-content:center;
+    margin-bottom:8px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12.5px;
+    font-weight:600;
+    color:#5a5765;
+  }
+  .legend-dot{width:10px;height:10px;border-radius:50%;}
+  .careers{
+    margin-top:20px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+  .career-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+  @media (max-width:520px){ .career-grid{grid-template-columns:1fr;} }
+  .career-pill{
+    background:#FAF8F4;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .share-block{
+    margin-top:24px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  #qrcode{
+    background:#fff;
+    padding:8px;
+    border-radius:10px;
+    border:1px solid var(--line);
+  }
+  .note{
+    font-size:12.5px;
+    color:#8a8794;
+    line-height:1.6;
+    margin-top:6px;
+  }
+  .footer-actions{
+    display:flex;
+    gap:12px;
+    margin-top:28px;
+    flex-wrap:wrap;
+  }
+  .dim-desc{
+    font-size:13.5px;
+    color:#6a6774;
+    margin-top:2px;
+  }
+  .score-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .score-bar-track{
+    flex:1;
+    height:10px;
+    background:var(--line);
+    border-radius:100px;
+    overflow:hidden;
+  }
+  .score-bar-fill{height:100%; border-radius:100px;}
+  .score-label{width:118px; font-size:13px; font-weight:700;}
+  .score-pct{width:38px; text-align:right; font-size:12.5px; font-weight:600; color:#6a6774;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- INTRO SCREEN -->
+  <div class="screen active" id="screen-intro">
+    <div class="card">
+      <svg class="compass" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5C6B73" stroke-width="2.5"/>
+        <path d="M50 10 L57 47 L50 90 L43 47 Z" fill="#C1440E"/>
+        <path d="M10 50 L47 43 L90 50 L47 57 Z" fill="#2E4F73"/>
+        <circle cx="50" cy="50" r="6" fill="#25242B"/>
+      </svg>
+      <div class="eyebrow">Career Interest Quiz</div>
+      <h1>Find your Career Compass</h1>
+      <p class="lead">This short quiz looks at what you enjoy doing — not what you're good at, and not a test you can fail. Answer honestly and quickly, based on your gut reaction. At the end you'll get a spider-web chart of your interests and some career ideas that match.</p>
+      <p class="lead"><strong>30 quick questions · about 5 minutes.</strong></p>
+      <button class="btn" onclick="startQuiz()">Start the quiz →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">Question 1 of 30</div>
+    </div>
+    <div class="card">
+      <div class="q-tag" id="q-tag">TYPE</div>
+      <div class="q-text" id="q-text">Question text</div>
+      <div class="scale" id="scale"></div>
+      <div class="nav-row">
+        <button class="btn secondary" id="back-btn" onclick="prevQuestion()">← Back</button>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div class="screen" id="screen-results">
+    <div class="card">
+      <div class="eyebrow">Your results</div>
+      <div class="results-header">
+        <div>
+          <h1 style="margin-bottom:2px;">Your Career Compass</h1>
+          <p class="lead" style="margin-top:6px;">Your top interest areas, from strongest to weakest.</p>
+        </div>
+        <div class="type-code" id="type-code"></div>
+      </div>
+
+      <canvas id="spider" width="460" height="460"></canvas>
+      <div class="legend" id="legend"></div>
+
+      <div id="score-list" style="margin-top:20px;"></div>
+
+      <div class="careers">
+        <h3>Careers worth exploring</h3>
+        <p class="dim-desc" id="career-blurb"></p>
+        <div class="career-grid" id="career-grid"></div>
+      </div>
+
+      <div class="share-block">
+        <div id="qrcode"></div>
+        <div>
+          <h3 style="margin-bottom:4px;">Share this quiz</h3>
+          <p class="note">Scan this code, or share the page link, so a friend can take the quiz too.<br>(The code points to wherever this page is hosted — it only works once this page has a live link.)</p>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <button class="btn" onclick="restartQuiz()">Take it again</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const TYPES = {
+  R: {name:"Realistic", tag:"The Doer", color:"#3E7C59", desc:"hands-on, practical, likes tools & the outdoors"},
+  I: {name:"Investigative", tag:"The Thinker", color:"#2E4F73", desc:"curious, analytical, likes solving problems"},
+  A: {name:"Artistic", tag:"The Creator", color:"#B5446E", desc:"creative, expressive, likes original ideas"},
+  S: {name:"Social", tag:"The Helper", color:"#D98E27", desc:"caring, people-focused, likes teamwork"},
+  E: {name:"Enterprising", tag:"The Persuader", color:"#C1440E", desc:"confident, likes leading & competing"},
+  C: {name:"Conventional", tag:"The Organiser", color:"#5C6B73", desc:"organised, detail-focused, likes structure"}
+};
+
+// 5 items per type, kid-friendly wording
+const ITEM_BANK = {
+  R: [
+    "I like fixing things that are broken.",
+    "I enjoy building or making things with my hands.",
+    "I like using tools, gadgets, or machines.",
+    "I'd rather be active outside than sit at a desk all day.",
+    "I like taking things apart to see how they work."
+  ],
+  I: [
+    "I like solving puzzles or brain teasers.",
+    "I enjoy figuring out how or why things happen.",
+    "I like doing science experiments.",
+    "I enjoy researching a topic I'm curious about.",
+    "I like working with numbers or data."
+  ],
+  A: [
+    "I enjoy drawing, painting, or designing things.",
+    "I like writing stories, poems, or song lyrics.",
+    "I enjoy performing — acting, dancing, or singing.",
+    "I like coming up with original, unusual ideas.",
+    "I enjoy making things look good or creative."
+  ],
+  S: [
+    "I like helping people work through a problem.",
+    "I enjoy explaining or teaching things to others.",
+    "I like working as part of a team.",
+    "I care about making other people feel included.",
+    "I enjoy volunteering or helping out in my community."
+  ],
+  E: [
+    "I like being the leader of a group or project.",
+    "I enjoy convincing people to see things my way.",
+    "I like starting new ideas or projects.",
+    "I enjoy competing and trying to win.",
+    "I like being in charge of making a plan happen."
+  ],
+  C: [
+    "I like keeping my things neat and organised.",
+    "I enjoy following clear, step-by-step instructions.",
+    "I like being accurate and careful with details.",
+    "I enjoy planning schedules, checklists, or timetables.",
+    "I like organising information, like in a spreadsheet or list."
+  ]
+};
+
+const SCALE_OPTIONS = [
+  {v:1, label:"Not like me at all"},
+  {v:2, label:"A little like me"},
+  {v:3, label:"Somewhat like me"},
+  {v:4, label:"Quite like me"},
+  {v:5, label:"Very much like me"}
+];
+
+// Build interleaved 30-question order: R1,I1,A1,S1,E1,C1,R2,I2,...
+const TYPE_ORDER = ["R","I","A","S","E","C"];
+let QUESTIONS = [];
+for(let i=0;i<5;i++){
+  TYPE_ORDER.forEach(t=>{
+    QUESTIONS.push({type:t, text:ITEM_BANK[t][i]});
+  });
+}
+
+// Career pairs lookup (unordered pair key, letters sorted alphabetically)
+const CAREER_PAIRS = {
+  "IR": ["Mechanical / robotics engineer","Automotive technician","Pilot","Software-for-hardware developer"],
+  "AR": ["Industrial or product designer","Set & prop designer","Architect","Landscape designer"],
+  "RS": ["Paramedic","PE / outdoor-ed teacher","Park ranger","Firefighter"],
+  "ER": ["Construction site manager","Chef","Agribusiness owner","Electrical contractor"],
+  "CR": ["Surveyor","Aircraft maintenance engineer","Laboratory technician","Carpenter / builder"],
+  "AI": ["Game designer","UX researcher","Astronomer","Inventor / R&D scientist"],
+  "IS": ["Doctor / GP","Psychologist","Speech pathologist","Veterinarian"],
+  "EI": ["Data scientist","Market researcher","Economist","Tech entrepreneur"],
+  "CI": ["Forensic scientist","Actuary","Statistician","Systems analyst"],
+  "AS": ["Music or drama teacher","Art therapist","Youth worker","Journalist"],
+  "AE": ["Advertising creative","Film / TV producer","Fashion designer","Interior design business owner"],
+  "AC": ["Graphic designer","Animator","Photo / video editor","UI / UX designer"],
+  "ES": ["Teacher","Human resources manager","School counsellor","Sports coach"],
+  "CS": ["Nurse","Social worker","Childcare centre coordinator","Community health worker"],
+  "CE": ["Accountant","Business manager","Event planner","Retail store manager"]
+};
+function pairKey(a,b){ return [a,b].sort().join(""); }
+
+/* ---------------- STATE ---------------- */
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+/* ---------------- NAVIGATION ---------------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startQuiz(){
+  current = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[current];
+  const t = TYPES[q.type];
+  const tag = document.getElementById('q-tag');
+  tag.textContent = t.name + " · " + t.tag;
+  tag.style.background = t.color;
+  document.getElementById('q-text').textContent = q.text;
+
+  document.getElementById('progress-label').textContent = `Question ${current+1} of ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width = `${(current/QUESTIONS.length)*100}%`;
+  document.getElementById('back-btn').style.visibility = current===0 ? 'hidden' : 'visible';
+
+  const scaleDiv = document.getElementById('scale');
+  scaleDiv.innerHTML = '';
+  SCALE_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('button');
+    const selected = answers[current] === opt.v;
+    btn.innerHTML = `<span class="dot" style="${selected ? `background:${t.color};border-color:${t.color};` : ''}"></span>${opt.label}`;
+    btn.style.borderColor = selected ? t.color : '';
+    btn.onclick = ()=> selectAnswer(opt.v);
+    scaleDiv.appendChild(btn);
+  });
+}
+
+function selectAnswer(v){
+  answers[current] = v;
+  if(current < QUESTIONS.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function prevQuestion(){
+  if(current>0){
+    current--;
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  document.getElementById('progress-fill').style.width = '100%';
+  const scores = computeScores();
+  renderResults(scores);
+  showScreen('screen-results');
+}
+
+/* ---------------- SCORING ---------------- */
+function computeScores(){
+  const totals = {R:0,I:0,A:0,S:0,E:0,C:0};
+  QUESTIONS.forEach((q,idx)=>{
+    totals[q.type] += (answers[idx] || 0);
+  });
+  // each type: 5 items, range 5-25 -> convert to 0-100%
+  const pct = {};
+  Object.keys(totals).forEach(k=>{
+    pct[k] = Math.round(((totals[k]-5)/20)*100);
+  });
+  return pct;
+}
+
+/* ---------------- RESULTS RENDER ---------------- */
+function renderResults(pct){
+  const sorted = Object.entries(pct).sort((a,b)=>b[1]-a[1]);
+  const top3 = sorted.slice(0,3).map(e=>e[0]);
+
+  // type code header
+  const codeEl = document.getElementById('type-code');
+  codeEl.innerHTML = top3.map(t=>`<span style="color:${TYPES[t].color}">${t}</span>`).join('');
+
+  // score bars
+  const listEl = document.getElementById('score-list');
+  listEl.innerHTML = '';
+  sorted.forEach(([k,v])=>{
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.innerHTML = `
+      <div class="score-label" style="color:${TYPES[k].color}">${TYPES[k].name}</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${v}%; background:${TYPES[k].color}"></div></div>
+      <div class="score-pct">${v}%</div>
+    `;
+    listEl.appendChild(row);
+  });
+
+  // legend
+  const legendEl = document.getElementById('legend');
+  legendEl.innerHTML = Object.keys(TYPES).map(k=>
+    `<div class="legend-item"><span class="legend-dot" style="background:${TYPES[k].color}"></span>${TYPES[k].name}</div>`
+  ).join('');
+
+  drawSpider(pct);
+
+  // careers
+  const key = pairKey(top3[0], top3[1]);
+  const careers = CAREER_PAIRS[key] || CAREER_PAIRS[pairKey(top3[0], top3[2])] || [];
+  document.getElementById('career-blurb').textContent =
+    `Based on your top two areas — ${TYPES[top3[0]].name} and ${TYPES[top3[1]].name} — here are some careers people with a similar mix often enjoy:`;
+  const grid = document.getElementById('career-grid');
+  grid.innerHTML = (careers.length ? careers : ["Explore careers linked to "+TYPES[top3[0]].name]).map(c=>`<div class="career-pill">${c}</div>`).join('');
+
+  // QR code
+  document.getElementById('qrcode').innerHTML = '';
+  new QRCode(document.getElementById('qrcode'), {
+    text: window.location.href,
+    width: 110,
+    height: 110,
+    colorDark: "#25242B",
+    colorLight: "#ffffff"
+  });
+}
+
+function drawSpider(pct){
+  const canvas = document.getElementById('spider');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2, R = W*0.36;
+  const keys = Object.keys(TYPES);
+  const n = keys.length;
+  const angleStep = (Math.PI*2)/n;
+
+  // rings
+  ctx.strokeStyle = '#E7E0D3';
+  ctx.lineWidth = 1;
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    for(let i=0;i<=n;i++){
+      const a = -Math.PI/2 + i*angleStep;
+      const x = cx + Math.cos(a)*R*f;
+      const y = cy + Math.sin(a)*R*f;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  });
+
+  // spokes + labels
+  ctx.fillStyle = '#25242B';
+  ctx.font = '600 13px Inter, sans-serif';
+  keys.forEach((k,i)=>{
+    const a = -Math.PI/2 + i*angleStep;
+    const x = cx + Math.cos(a)*R;
+    const y = cy + Math.sin(a)*R;
+    ctx.strokeStyle = '#E7E0D3';
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+
+    const lx = cx + Math.cos(a)*(R+28);
+    const ly = cy + Math.sin(a)*(R+28);
+    ctx.textAlign = Math.abs(Math.cos(a))<0.2 ? 'center' : (Math.cos(a)>0?'left':'right');
+    ctx.fillStyle = TYPES[k].color;
+    ctx.fillText(k, lx, ly+4);
+  });
+
+  // data polygon
+  ctx.beginPath();
+  keys.forEach((k,i)=>{
+    const a = -Math.PI/2 + i*angleStep;
+    const val = Math.max(pct[k],0)/100;
+    const x = cx + Math.cos(a)*R*val;
+    const y = cy + Math.sin(a)*R*val;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(193,68,14,0.18)';
+  ctx.fill();
+  ctx.strokeStyle = '#C1440E';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // dots
+  keys.forEach((k,i)=>{
+    const a = -Math.PI/2 + i*angleStep;
+    const val = Math.max(pct[k],0)/100;
+    const x = cx + Math.cos(a)*R*val;
+    const y = cy + Math.sin(a)*R*val;
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle = TYPES[k].color;
+    ctx.fill();
+  });
+}
+
+function restartQuiz(){
+  showScreen('screen-intro');
+}
+</script>
+</body>
+</html>
