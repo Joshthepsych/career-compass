@@ -271,7 +271,17 @@
     overflow:hidden;
   }
   .score-bar-fill{height:100%; border-radius:100px;}
-  .score-label{width:118px; font-size:13px; font-weight:700;}
+  .score-label{width:118px; font-size:13px; font-weight:700; flex-shrink:0;}
+  .score-block{margin-bottom:4px;}
+  .score-desc{
+    font-size:12.5px;
+    color:#6a6774;
+    line-height:1.5;
+    margin:2px 0 14px 128px;
+  }
+  @media (max-width:480px){
+    .score-desc{margin-left:0;}
+  }
   .score-pct{width:38px; text-align:right; font-size:12.5px; font-weight:600; color:#6a6774;}
 </style>
 </head>
@@ -290,7 +300,7 @@
       <div class="eyebrow">Career Interest Quiz</div>
       <h1>Find your Career Compass</h1>
       <p class="lead">This short quiz looks at what you enjoy doing — not what you're good at, and not a test you can fail. Answer honestly and quickly, based on your gut reaction. At the end you'll get a spider-web chart of your interests and some career ideas that match.</p>
-      <p class="lead"><strong>30 quick questions · about 5 minutes.</strong></p>
+      <p class="lead"><strong>12 quick questions · about 2 minutes.</strong></p>
       <button class="btn" onclick="startQuiz()">Start the quiz →</button>
     </div>
   </div>
@@ -354,12 +364,12 @@
 <script>
 /* ---------------- DATA ---------------- */
 const TYPES = {
-  R: {name:"Realistic", tag:"The Doer", color:"#3E7C59", desc:"hands-on, practical, likes tools & the outdoors"},
-  I: {name:"Investigative", tag:"The Thinker", color:"#2E4F73", desc:"curious, analytical, likes solving problems"},
-  A: {name:"Artistic", tag:"The Creator", color:"#B5446E", desc:"creative, expressive, likes original ideas"},
-  S: {name:"Social", tag:"The Helper", color:"#D98E27", desc:"caring, people-focused, likes teamwork"},
-  E: {name:"Enterprising", tag:"The Persuader", color:"#C1440E", desc:"confident, likes leading & competing"},
-  C: {name:"Conventional", tag:"The Organiser", color:"#5C6B73", desc:"organised, detail-focused, likes structure"}
+  R: {name:"Realistic", tag:"The Doer", color:"#3E7C59", desc:"Enjoys hands-on, practical activities — using tools, building or fixing things, working with machines, or being active outdoors."},
+  I: {name:"Investigative", tag:"The Thinker", color:"#2E4F73", desc:"Enjoys figuring things out — solving problems, asking why, doing research, or working with data and numbers."},
+  A: {name:"Artistic", tag:"The Creator", color:"#B5446E", desc:"Enjoys self-expression and original ideas — drawing, writing, music, design, or performing."},
+  S: {name:"Social", tag:"The Helper", color:"#D98E27", desc:"Enjoys working with and supporting people — teaching, helping, listening, or working in a team."},
+  E: {name:"Enterprising", tag:"The Persuader", color:"#C1440E", desc:"Enjoys leading, influencing, and taking initiative — starting projects, convincing others, or competing to achieve a goal."},
+  C: {name:"Conventional", tag:"The Organiser", color:"#5C6B73", desc:"Enjoys structure, order, and accuracy — following clear steps, organising information, and managing details."}
 };
 
 // 5 items per type, kid-friendly wording
@@ -380,9 +390,9 @@ const ITEM_BANK = {
   ],
   A: [
     "I enjoy drawing, painting, or designing things.",
+    "I like coming up with original, unusual ideas.",
     "I like writing stories, poems, or song lyrics.",
     "I enjoy performing — acting, dancing, or singing.",
-    "I like coming up with original, unusual ideas.",
     "I enjoy making things look good or creative."
   ],
   S: [
@@ -419,7 +429,7 @@ const SCALE_OPTIONS = [
 // Build interleaved 30-question order: R1,I1,A1,S1,E1,C1,R2,I2,...
 const TYPE_ORDER = ["R","I","A","S","E","C"];
 let QUESTIONS = [];
-for(let i=0;i<5;i++){
+for(let i=0;i<2;i++){
   TYPE_ORDER.forEach(t=>{
     QUESTIONS.push({type:t, text:ITEM_BANK[t][i]});
   });
@@ -517,10 +527,10 @@ function computeScores(){
   QUESTIONS.forEach((q,idx)=>{
     totals[q.type] += (answers[idx] || 0);
   });
-  // each type: 5 items, range 5-25 -> convert to 0-100%
+  // each type: 2 items, range 2-10 -> convert to 0-100%
   const pct = {};
   Object.keys(totals).forEach(k=>{
-    pct[k] = Math.round(((totals[k]-5)/20)*100);
+    pct[k] = Math.round(((totals[k]-2)/8)*100);
   });
   return pct;
 }
@@ -539,11 +549,14 @@ function renderResults(pct){
   listEl.innerHTML = '';
   sorted.forEach(([k,v])=>{
     const row = document.createElement('div');
-    row.className = 'score-row';
+    row.className = 'score-block';
     row.innerHTML = `
-      <div class="score-label" style="color:${TYPES[k].color}">${TYPES[k].name}</div>
-      <div class="score-bar-track"><div class="score-bar-fill" style="width:${v}%; background:${TYPES[k].color}"></div></div>
-      <div class="score-pct">${v}%</div>
+      <div class="score-row">
+        <div class="score-label" style="color:${TYPES[k].color}">${TYPES[k].name}</div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${v}%; background:${TYPES[k].color}"></div></div>
+        <div class="score-pct">${v}%</div>
+      </div>
+      <div class="score-desc">${TYPES[k].desc}</div>
     `;
     listEl.appendChild(row);
   });
